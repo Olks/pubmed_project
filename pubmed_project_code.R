@@ -31,6 +31,28 @@ TitlesNonEmpty <- pubmed_dataTi[numsNonEmpty]
 numsEmpty <- which(pubmed_dataAb=="")
 titlesOfEmptyAbstract <- pubmed_dataTi[numsEmpty]
 
+### processing function 
+texts.processing <- function(x){
+        TextsCorpus <- VCorpus(VectorSource(x), 
+                                   readerControl = list(reader = readPlain, language = "en"))
+        TextsCorpus <- tm_map(TextsCorpus, removePunctuation) 
+        TextsCorpus <- tm_map(TextsCorpus, removeNumbers) 
+        TextsCorpus <- tm_map(TextsCorpus, tolower)
+        TextsCorpus <- tm_map(TextsCorpus, removeWords, qdapDictionaries::Top200Words) 
+        TextsCorpus <- tm_map(TextsCorpus, stripWhitespace)   
+        TextsCorpus <- tm_map(TextsCorpus, PlainTextDocument)
+        dtmTexts <- DocumentTermMatrix(TextsCorpus)  
+        dtmTexts <- as.matrix(dtmTexts)
+        rownames(dtmTexts) <- as.character(1:dim(dtmTexts)[1])
+        dtmTexts <- as.data.frame(dtmTexts)
+        return(dtmTexts)
+}
+
+###### processing :)
+dtmAbstracts <- texts.processing(AbstractsNonEmpty)
+dtmTitles <- texts.processing(TitlesNonEmpty)
+######
+
 
 #Corpus for Abstracts
 AbstractsCorpus <- VCorpus(VectorSource(AbstractsNonEmpty), 
