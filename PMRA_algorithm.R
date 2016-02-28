@@ -5,10 +5,12 @@ library(wordcloud)
 library(RColorBrewer)
 
 
-search_topic <- 'psoriasis arthritis'
-search_query <- EUtilsSummary(search_topic, retmax=615)
+search_topic <- 'plaque psoriasis'
+search_query <- EUtilsSummary(search_topic, retmax=4000) #mindate=2014, maxdate=2016)
 fetch <- EUtilsGet(search_query)
 
+pubmed_dataMesh <- Mesh(fetch)
+sum(is.na(pubmed_dataMesh))
 pubmed_dataAb <- AbstractText(fetch)
 pubmed_dataTi <- ArticleTitle(fetch)
 
@@ -27,7 +29,7 @@ texts.processing <- function(texts.vector){
         TextsCorpus <- tm_map(TextsCorpus, stripWhitespace)   
         TextsCorpus <- tm_map(TextsCorpus, PlainTextDocument)
         dtmTexts <- DocumentTermMatrix(TextsCorpus)  
-        dtmTexts <- removeSparseTerms(dtmTexts,0.9)
+        dtmTexts <- removeSparseTerms(dtmTexts,0.999)
         dtmTexts <- as.matrix(dtmTexts)
         rownames(dtmTexts) <- as.character(1:dim(dtmTexts)[1])
         dtmTexts <- as.data.frame(dtmTexts)
