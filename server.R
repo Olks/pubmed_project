@@ -8,14 +8,14 @@ shinyServer(function(input, output) {
         search_topic <- eventReactive(input$searchButton, {input$term})
         
         output$articlesNr <- renderText({
-                search_query <- EUtilsSummary(search_topic(), retmax=40) #type="esearch", db="pubmed", datetype='pdat') #mindate=2014, maxdate=2016)
+                search_query <- EUtilsSummary(search_topic(), retmax=40) 
                 N <- QueryCount(search_query)
                 paste0("There are ", N, " articles referring to <", search_topic(), ">" )
         })
         
         
         output$authorsTable <- renderTable({
-                search_query <- EUtilsSummary(search_topic(), retmax=40) #type="esearch", db="pubmed", datetype='pdat') #mindate=2014, maxdate=2016)
+                search_query <- EUtilsSummary(search_topic(), retmax=40) 
                 fetch <- EUtilsGet(search_query)
                 AuthorList<-Author(fetch)
                 
@@ -36,8 +36,9 @@ shinyServer(function(input, output) {
                 auths
         })
         
-        relevantSort <- eventReactive(input$sortButton, {input$term})
+        relevantSort <- eventReactive(input$sortButton, {1})
         output$relevancePlot <- renderPlot({
+                if(relevantSort()==1){
                 search_query <- EUtilsSummary(search_topic(), retmax=40) #type="esearch", db="pubmed", datetype='pdat') #mindate=2014, maxdate=2016)
                 fetch <- EUtilsGet(search_query)
                 
@@ -165,10 +166,14 @@ shinyServer(function(input, output) {
                 
                 relevances <- relevance.index()
                 
-                max.rel <- head(sort(relevances, decreasing = TRUE, index.return = TRUE)$ix,20)
-                #head(sort(relevances, decreasing = TRUE, index.return = TRUE)$x,20)
-                plot(sort(relevances, decreasing = TRUE, index.return = TRUE)$x,pch=19,cex=0.5)
-                #pubmed_dataTi[max.rel]
+                max.rel <- head(sort(relevances, decreasing = TRUE, 
+                                     index.return = TRUE)$ix,20)
+                
+                plot(sort(relevances, decreasing = TRUE, index.return = TRUE)$x,
+                     pch=19,cex=0.5,
+                     ylab="relevance.index",xlab="article number",
+                     main="Relevance plot")
+                }
                 
         })
         
