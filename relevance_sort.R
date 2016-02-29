@@ -145,3 +145,4 @@ head(sort(relevances, decreasing = TRUE, index.return = TRUE)$x,20)
 pubmed_dataTi[max.rel]
 plot(sort(relevances, decreasing = TRUE, index.return = TRUE)$x,pch=19,cex=0.5)
 
+pubmed_dataTi[head(relevance,bestChoose())]

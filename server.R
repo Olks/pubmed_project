@@ -2,13 +2,14 @@ library(shiny)
 library(RISmed)
 library(tm)
 library(qdap)
+library(ggplot2)
 
 shinyServer(function(input, output) { 
         
         search_topic <- eventReactive(input$searchButton, {input$term})
         
         output$articlesNr <- renderText({
-                search_query <- EUtilsSummary(search_topic(), retmax=40) 
+                search_query <- EUtilsSummary(search_topic()) 
                 N <- QueryCount(search_query)
                 paste0("There are ", N, " articles referring to <", search_topic(), ">" )
         })
@@ -44,7 +45,7 @@ shinyServer(function(input, output) {
                 
                 pubmed_dataMesh <- Mesh(fetch)
                 pubmed_dataAb <- AbstractText(fetch)
-                pubmed_dataTi <- ArticleTitle(fetch)
+                pubmed_dataTi <<- ArticleTitle(fetch)
                 pubmed_dataYear <- YearPubmed(fetch)
                 N <- length(pubmed_dataTi)  # number of documents
                 
@@ -166,8 +167,8 @@ shinyServer(function(input, output) {
                 
                 relevances <- relevance.index()
                 
-                max.rel <- head(sort(relevances, decreasing = TRUE, 
-                                     index.return = TRUE)$ix,20)
+                relevances.index <<- sort(relevances, decreasing = TRUE, 
+                                     index.return = TRUE)$ix
                 
                 plot(sort(relevances, decreasing = TRUE, index.return = TRUE)$x,
                      pch=19,cex=0.5,
@@ -177,5 +178,15 @@ shinyServer(function(input, output) {
                 
         })
         
+        bestChoose <- eventReactive(input$bestButton, {input$bestArticlesNum})
+        output$bestArticles <- renderTable({
+               if(bestChoose()>0){
+                       data.frame(title=pubmed_dataTi[head(relevances.index,bestChoose())])
+               }
+                
+        })
         
-})
+        
+        
+        })
+
