@@ -334,20 +334,4 @@ wordcloud(words=colnames(mydata)[-dl],freq=as.numeric(apply(mydata[mydata$fit.cl
 
 
 
-library(ggplot)
-# years
-count<-table(y)
-count<-as.data.frame(count)
-names(count)<-c("Year", "Counts")
-num <- data.frame(Year=count$Year, Counts=cumsum(count$Counts))
-num$g <- "g"
-names(num) <- c("Year", "Counts", "g")
-q <- qplot(x=Year, y=Counts, data=count, geom="bar", stat="identity")
-q <- q + ggtitle(paste("PubMed articles containing '", g,            "' ", "= ", max(num$Counts), sep="")) +
-        ylab("Number of articles") +
-        xlab(paste("Year n Query date: ", Sys.time(), sep="")) +
-        labs(colour="") +
-        theme_bw()
-q
-
 

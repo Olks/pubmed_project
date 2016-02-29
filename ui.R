@@ -9,6 +9,11 @@ shinyUI(pageWithSidebar(
                           label = "Enter searched term:", 
                           value = "" 
                 ),
+                dateRangeInput(inputId = "dateRange",
+                               label = "Date range",
+                               start = "2015-01-01",
+                               max = Sys.Date()
+                ),
                 actionButton("searchButton","Search"),
                 h4("--------------------------------"),
                 h5(strong("Sort the results by their relevance:")),
@@ -20,7 +25,8 @@ shinyUI(pageWithSidebar(
                                         to analyse", 
                           value = 0
                 ),
-                actionButton("bestButton","Choose")
+                actionButton("bestButton","Choose"),
+                downloadButton('downloadData', 'Download')
                 
         ),
         mainPanel( 

@@ -4,13 +4,14 @@ library(qdap)
 library(wordcloud)
 library(RColorBrewer)
 
-
+#### ponisza analiza skupieñ wymaga wczeœniejszego zastososowania sortowania 
+#### i wybrania kilkudziesiêciu najbardziej trafnych abstraktów
+#### w przypadku wiekszej liczby dendrogram bêdzie nieczytelny
 search_topic <- 'plaque psoriasis'
-search_query <- EUtilsSummary(search_topic, retmax=4000) #mindate=2014, maxdate=2016)
+search_query <- EUtilsSummary(search_topic, retmax=500) #mindate=2014, maxdate=2016)
 fetch <- EUtilsGet(search_query)
 
 pubmed_dataMesh <- Mesh(fetch)
-sum(is.na(pubmed_dataMesh))
 pubmed_dataAb <- AbstractText(fetch)
 pubmed_dataTi <- ArticleTitle(fetch)
 
@@ -29,7 +30,7 @@ texts.processing <- function(texts.vector){
         TextsCorpus <- tm_map(TextsCorpus, stripWhitespace)   
         TextsCorpus <- tm_map(TextsCorpus, PlainTextDocument)
         dtmTexts <- DocumentTermMatrix(TextsCorpus)  
-        dtmTexts <- removeSparseTerms(dtmTexts,0.999)
+        dtmTexts <- removeSparseTerms(dtmTexts,0.85)
         dtmTexts <- as.matrix(dtmTexts)
         rownames(dtmTexts) <- as.character(1:dim(dtmTexts)[1])
         dtmTexts <- as.data.frame(dtmTexts)
@@ -39,7 +40,7 @@ texts.processing <- function(texts.vector){
 ### DocumentTermMatrix as data frame
 dtmAbstracts <- texts.processing(AbstractsNonEmpty)
 dim(dtmAbstracts)
-### parameters for PMRA model
+### parameters for PMRA model, as suggested by the authors
 lambda <- 0.022
 mi <- 0.013
 
@@ -58,7 +59,6 @@ omega.index <- function(dtm){
                                 l <- sum(dtm[j,])  # length of document j
                                 omegas[j,i] <- omega(k,l)
                         }
-                        print(i)
                 }
         }
         return(omegas)
@@ -96,6 +96,17 @@ similarities <- similarity(omega.indices)
 #### 10 most similar articles for first article 
 max.similar <- head(sort(similarities[,1], decreasing=TRUE, index.return=TRUE)$ix,10)
 TitlesNonEmpty[max.similar]
+
+
+### analiza skupieñ - dendrogram
+fit <- hclust(as.dist(similarities), method="ward.D") 
+plot(fit)
+groups <- cutree(fit, k=4)
+rect.hclust(fit, k=4, border="red")
+
+
+
+
 
 
 

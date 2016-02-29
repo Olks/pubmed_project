@@ -1,15 +1,15 @@
+### relevance sort
+
 library(RISmed)
 library(tm)
 library(qdap)
 library(wordcloud)
 library(RColorBrewer)
 
-###Sortowanie wed³ug trafnoœci z uwzglêdnieniem wspó³wystêpowania s³ow
 
-## zapytanie zapisz do zmiennej search_topic
-search_topic <- 'psoriasis arthritis'
-
-search_query <- EUtilsSummary(search_topic, retmax=1000) #type="esearch", db="pubmed", datetype='pdat') #mindate=2014, maxdate=2016)
+search_topic <- 'plaque psoriasis AND clinical trial'
+search_topic <- 'plaque psoriasis'
+search_query <- EUtilsSummary(search_topic, retmax=40) #type="esearch", db="pubmed", datetype='pdat') #mindate=2014, maxdate=2016)
 fetch <- EUtilsGet(search_query)
 
 pubmed_dataMesh <- Mesh(fetch)
@@ -21,8 +21,6 @@ sum(is.na(pubmed_dataYear))
 
 N <- length(pubmed_dataTi)  # number of documents
 
-### pêtla skleja terminy MeSH ka¿dego abstraktu do jednego stringa
-### ¿eby mog³y byæ dalej analizowane w korpucie pakietu {tm}
 pubmed_Mesh <- rep("",N)
 for(i in 1:N){
         if (!is.na(pubmed_dataMesh[[i]])[1]){
@@ -97,12 +95,12 @@ make.TF <- function(dtmTable){
                         lc <- dtmTable[i,localTerms[j]]  # term frequency
                         TF[i,j] <- 1/(1+exp(alfa*dl)*lambda^(lc-1)) 
                         #print(i)
+                        }
                 }
-        }
         return(TF)
-}
-
-
+        }
+        
+        
 
 TFabstracts <- make.TF(dtmAbstracts)
 TFtitles <- make.TF(dtmTitles)
@@ -142,15 +140,9 @@ relevance.index <- function(){
 
 relevances <- relevance.index()
 
-
-### wykres trafnoœci abstraktów
-plot(sort(relevances, decreasing = TRUE, index.return = TRUE)$x,
-     pch=19,cex=0.5,
-     ylab="relevance.index",xlab="article number",
-     main=paste("Relevance plot dla zapytania:", search_topic ))
-
-### tytu³y 20 najbardziej trafnych artyku³ów
 max.rel <- head(sort(relevances, decreasing = TRUE, index.return = TRUE)$ix,20)
+head(sort(relevances, decreasing = TRUE, index.return = TRUE)$x,20)
 pubmed_dataTi[max.rel]
+plot(sort(relevances, decreasing = TRUE, index.return = TRUE)$x,pch=19,cex=0.5)
 
-
+pubmed_dataTi[head(relevance,bestChoose())]

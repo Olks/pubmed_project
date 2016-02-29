@@ -9,14 +9,20 @@ shinyServer(function(input, output) {
         search_topic <- eventReactive(input$searchButton, {input$term})
         
         output$articlesNr <- renderText({
-                search_query <- EUtilsSummary(search_topic()) 
+                search_query <<- EUtilsSummary(search_topic(), retmax=1000,
+                                               mindate=gsub("-","/",input$dateRange[1]),
+                                               maxdate=gsub("-","/",input$dateRange[2]), 
+                                               datetype='pdat')
+                #fetch <<- EUtilsGet(search_query)
+                #pubmed_dataTi <<- ArticleTitle(fetch)
+                #N <- length(pubmed_dataTi)
                 N <- QueryCount(search_query)
                 paste0("There are ", N, " articles referring to <", search_topic(), ">" )
         })
         
         
         output$authorsTable <- renderTable({
-                search_query <- EUtilsSummary(search_topic(), retmax=40) 
+                search_query <- EUtilsSummary(search_topic())
                 fetch <- EUtilsGet(search_query)
                 AuthorList<-Author(fetch)
                 
@@ -40,12 +46,10 @@ shinyServer(function(input, output) {
         relevantSort <- eventReactive(input$sortButton, {1})
         output$relevancePlot <- renderPlot({
                 if(relevantSort()==1){
-                search_query <- EUtilsSummary(search_topic(), retmax=40) #type="esearch", db="pubmed", datetype='pdat') #mindate=2014, maxdate=2016)
-                fetch <- EUtilsGet(search_query)
-                
+                fetch <<- EUtilsGet(search_query)
+                pubmed_dataTi <<- ArticleTitle(fetch)
                 pubmed_dataMesh <- Mesh(fetch)
                 pubmed_dataAb <- AbstractText(fetch)
-                pubmed_dataTi <<- ArticleTitle(fetch)
                 pubmed_dataYear <- YearPubmed(fetch)
                 N <- length(pubmed_dataTi)  # number of documents
                 
@@ -153,10 +157,10 @@ shinyServer(function(input, output) {
                                 indices[i] <- 0 
                                 for (j in 1:n.terms){
                                         for (h in 1:3){
-                                                allTogether <- 0
+                                                altogether <- 0
                                                 if(terms[j] %in% inTerms[[h]]){
-                                                        allTogether <- allTogether + 1
-                                                        indices[i] <- indices[i] + FW[h]*IDF[j,h]*TFs[[h]][i,j] + allTogether
+                                                        altogether <- altogether + 1
+                                                        indices[i] <- indices[i] + FW[h]*IDF[j,h]*TFs[[h]][i,j] + altogether
                                                 }
                                         }
                                 }
@@ -180,12 +184,19 @@ shinyServer(function(input, output) {
         
         bestChoose <- eventReactive(input$bestButton, {input$bestArticlesNum})
         output$bestArticles <- renderTable({
-               if(bestChoose()>0){
-                       data.frame(title=pubmed_dataTi[head(relevances.index,bestChoose())])
+                     if(bestChoose()>0){
+                        tabela <<- data.frame(title=pubmed_dataTi[head(relevances.index,bestChoose())])
+                        tabela
                }
                 
         })
         
+        output$downloadData <- downloadHandler(
+                filename = function(){"abstracts.csv"},
+                content = function(file) {
+                        write.csv(tabela, file)
+                }
+        )
         
         
         })
