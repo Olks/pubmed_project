@@ -7,8 +7,9 @@ library(wordcloud)
 library(RColorBrewer)
 
 
-search_topic <- 'plaque psoriasis'
-search_query <- EUtilsSummary(search_topic, retmax=4000) #mindate=2014, maxdate=2016)
+search_topic <- 'plaque psoriasis AND clinical trial'
+search_topic <- 'plaque psoriasis clinical trial'
+search_query <- EUtilsSummary(search_topic, retmax=4000) #type="esearch", db="pubmed", datetype='pdat') #mindate=2014, maxdate=2016)
 fetch <- EUtilsGet(search_query)
 
 pubmed_dataMesh <- Mesh(fetch)
@@ -53,38 +54,40 @@ for (i in 1:n.terms){
 # Abstract, Title, Mesh
 FW <- c(5.0, 16.0, 10.0)
 
+inTerms <- list(terms[terms %in% colnames(dtmAbstracts)],
+                terms[terms %in% colnames(dtmTitles)],
+                terms[terms %in% colnames(dtmMeshTerms)])
+
 # TF
 make.TF <- function(dtmTable){
         alfa <- 0.0044
         lambda <- 0.7
-        TF <- data.frame()
-        columnNames <- c()
+        columnNames <- terms[terms %in% colnames(dtmTable)]
         N <- dim(dtmTable)[1] #number of documents
+        cn <- length(columnNames) # number of terms (columns)
+        TF <- matrix(0,N,cn)
+        TF <- as.data.frame(TF)
+        colnames(TF) <- terms[terms %in% colnames(dtmTable)]
+        localTerms<-terms[terms %in% colnames(dtmTable)]
         dls <- apply(dtmTable, 1, sum) 
-        for (j in 1:n.terms){
-                if(terms[j] %in% colnames(dtmTable)){
-                        for (i in 1:N){   # for each document
-                                dl<- dls[i]   # document length
-                                if (dl < 250) dl <- 250
-                                lc <- dtmTable[i,terms[j]]  # term frequency
-                                TF[i,j] <- 1/(1+exp(alfa*dl)*lambda^(lc-1)) 
+        for (j in 1:cn){  # for each term
+                for (i in 1:N){   # for each document
+                        dl<- dls[i]   # document length
+                        if (dl < 250) dl <- 250
+                        lc <- dtmTable[i,localTerms[j]]  # term frequency
+                        TF[i,j] <- 1/(1+exp(alfa*dl)*lambda^(lc-1)) 
                         #print(i)
                         }
                 }
-        }
-        colnames(TF) <- terms[terms %in% colnames(dtmTable)]
         return(TF)
+        }
         
-}
+        
 
 TFabstracts <- make.TF(dtmAbstracts)
 TFtitles <- make.TF(dtmTitles)
 TFmesh <- make.TF(dtmMeshTerms)
 TFs <- list(a=TFabstracts,b=TFtitles,c=TFmesh)
-
-inTerms <- list(terms[terms %in% colnames(dtmAbstracts)],
-                terms[terms %in% colnames(dtmTitles)],
-                terms[terms %in% colnames(dtmMeshTerms)])
 
 
 relevance.index <- function(){

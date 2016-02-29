@@ -5,7 +5,7 @@ library(wordcloud)
 library(RColorBrewer)
 
 
-search_topic <- 'psoriasis arthritis'
+search_topic <- 'plaque psoriasis clinic trial'
 search_query <- EUtilsSummary(search_topic, retmax=615)
 fetch <- EUtilsGet(search_query)
 
