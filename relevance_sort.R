@@ -8,8 +8,8 @@ library(RColorBrewer)
 
 
 search_topic <- 'plaque psoriasis AND clinical trial'
-search_topic <- 'plaque psoriasis clinical trial'
-search_query <- EUtilsSummary(search_topic, retmax=4000) #type="esearch", db="pubmed", datetype='pdat') #mindate=2014, maxdate=2016)
+search_topic <- 'plaque psoriasis'
+search_query <- EUtilsSummary(search_topic, retmax=40) #type="esearch", db="pubmed", datetype='pdat') #mindate=2014, maxdate=2016)
 fetch <- EUtilsGet(search_query)
 
 pubmed_dataMesh <- Mesh(fetch)
@@ -31,6 +31,24 @@ for(i in 1:N){
                 }
                 pubmed_Mesh[i] <- strip(pubmed_Mesh[i])
         }
+}
+
+
+texts.processing <- function(texts.vector){
+        TextsCorpus <- VCorpus(VectorSource(texts.vector), 
+                               readerControl = list(reader = readPlain, language = "en"))
+        TextsCorpus <- tm_map(TextsCorpus, removePunctuation) 
+        TextsCorpus <- tm_map(TextsCorpus, removeNumbers) 
+        TextsCorpus <- tm_map(TextsCorpus, tolower)
+        TextsCorpus <- tm_map(TextsCorpus, removeWords, qdapDictionaries::Top200Words) 
+        TextsCorpus <- tm_map(TextsCorpus, stripWhitespace)   
+        TextsCorpus <- tm_map(TextsCorpus, PlainTextDocument)
+        dtmTexts <- DocumentTermMatrix(TextsCorpus)  
+        dtmTexts <- removeSparseTerms(dtmTexts,0.999)
+        dtmTexts <- as.matrix(dtmTexts)
+        rownames(dtmTexts) <- as.character(1:dim(dtmTexts)[1])
+        dtmTexts <- as.data.frame(dtmTexts)
+        return(dtmTexts)
 }
 
 dtmMeshTerms <- texts.processing(pubmed_Mesh)
@@ -86,8 +104,12 @@ make.TF <- function(dtmTable){
 
 TFabstracts <- make.TF(dtmAbstracts)
 TFtitles <- make.TF(dtmTitles)
-TFmesh <- make.TF(dtmMeshTerms)
-TFs <- list(a=TFabstracts,b=TFtitles,c=TFmesh)
+TFs <- list(a=TFabstracts,b=TFtitles)
+if(dim(dtmMeshTerms)[2]!=0){
+        TFmesh <- make.TF(dtmMeshTerms)
+        TFs <- list(a=TFabstracts,b=TFtitles,c=TFmesh)
+}
+
 
 
 relevance.index <- function(){
@@ -103,7 +125,7 @@ relevance.index <- function(){
                 }
                 indices[i] <- 0 
                 for (j in 1:n.terms){
-                        for (h in 1:3){
+                        for (h in 1:length(TFs)){
                                 allTogether <- 0
                                 if(terms[j] %in% inTerms[[h]]){
                                         allTogether <- allTogether + 1
