@@ -148,6 +148,7 @@ shinyServer(function(input, output) {
                         Yc <- as.numeric(format(Sys.Date(), "%Y"))  # current year
                         for (i in 1:N) {
                                 Yp <- pubmed_dataYear[i]
+                                if (is.na(Yp)) Yp<-2000
                                 difference <- Yc - Yp
                                 if (difference <8){
                                         PW <- 1 + (7-difference)/10        

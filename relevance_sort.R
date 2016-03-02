@@ -7,9 +7,14 @@ library(RColorBrewer)
 ###Sortowanie wed³ug trafnoœci z uwzglêdnieniem wspó³wystêpowania s³ow
 
 ## zapytanie zapisz do zmiennej search_topic
-search_topic <- 'psoriasis arthritis'
+search_topic <- 'plaque psoriasis'
 
 search_query <- EUtilsSummary(search_topic, retmax=1000) #type="esearch", db="pubmed", datetype='pdat') #mindate=2014, maxdate=2016)
+search_query <- EUtilsSummary(search_topic, retmax=1000,
+                               mindate="2015/01/01",
+                               maxdate="2016/03/02", 
+                               datetype='pdat')
+QueryCount(search_query)
 fetch <- EUtilsGet(search_query)
 
 pubmed_dataMesh <- Mesh(fetch)
@@ -20,7 +25,7 @@ pubmed_dataYear <- YearPubmed(fetch)
 sum(is.na(pubmed_dataYear))
 
 N <- length(pubmed_dataTi)  # number of documents
-
+N
 ### pêtla skleja terminy MeSH ka¿dego abstraktu do jednego stringa
 ### ¿eby mog³y byæ dalej analizowane w korpucie pakietu {tm}
 pubmed_Mesh <- rep("",N)
@@ -119,6 +124,7 @@ relevance.index <- function(){
         Yc <- as.numeric(format(Sys.Date(), "%Y"))  # current year
         for (i in 1:N) {
                 Yp <- pubmed_dataYear[i]
+                if (is.na(Yp)) Yp<-2000
                 difference <- Yc - Yp
                 if (difference <8){
                         PW <- 1 + (7-difference)/10        
