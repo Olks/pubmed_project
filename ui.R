@@ -1,5 +1,5 @@
 library(shiny) 
-
+Sys.setenv(JAVA_HOME="C:/Program Files/Java/jre-10.0.1")
 
 
 shinyUI(pageWithSidebar( 
